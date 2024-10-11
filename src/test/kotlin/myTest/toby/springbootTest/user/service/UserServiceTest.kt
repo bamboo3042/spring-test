@@ -1,6 +1,7 @@
 package myTest.toby.springbootTest.user.service
 
 import io.mockk.*
+import myTest.toby.springbootTest.user.AppConfig
 import myTest.toby.springbootTest.user.dao.UserDao
 import myTest.toby.springbootTest.user.domain.Level
 import myTest.toby.springbootTest.user.domain.User
@@ -10,23 +11,27 @@ import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import org.springframework.aop.framework.ProxyFactoryBean
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
+import org.springframework.context.annotation.Import
 import org.springframework.mail.MailException
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
 import org.springframework.transaction.PlatformTransactionManager
+import java.lang.reflect.Proxy
 import java.util.*
 
-@SpringJUnitConfig
-@ContextConfiguration(classes = [UserConfig::class])
+//@Import(UserServiceTestConfig::class)
+@SpringBootTest
+@ContextConfiguration(classes = [AppConfig::class, UserServiceTestConfig::class])
 class UserServiceTest {
     @Autowired
     lateinit var userService: UserService
+
+    @Autowired
+    lateinit var testUserService: UserService
 
     @Autowired
     lateinit var userDao: UserDao
@@ -191,21 +196,12 @@ class UserServiceTest {
     }
 
     @Test
-    @DirtiesContext
     fun upgradeAllOrNothing() {
-        val testUserService = TestUserService(users[3].id)
-        testUserService.setUserDao(userDao)
-        testUserService.setMailSender(mailSender)
-
-        val txProxyFactoryBean = context.getBean("&userService", ProxyFactoryBean::class.java)
-        txProxyFactoryBean.setTarget(testUserService)
-        val txUserService = txProxyFactoryBean.getObject() as UserService
-
         userDao.deleteAll()
         for (user in users) userDao.add(user)
 
         try {
-            txUserService.upgradeLevels()
+            this.testUserService.upgradeLevels()
             fail("TestUserServiceException expected")
         } catch (e: TestUserServiceException) {
         }
@@ -213,7 +209,14 @@ class UserServiceTest {
         checkLevelUpgraded(users[1], false)
     }
 
-    class TestUserService(private val id: String) : UserServiceImpl() {
+    @Test
+    fun advisorAutoProxyCreator() {
+        assertThat(testUserService).isInstanceOf(Proxy::class.java)
+    }
+
+    class TestUserServiceImpl(
+        private val id: String = "madnite1"
+    ) : UserServiceImpl() {
         override fun upgradeLevel(user: User) {
             if (user.id.equals(this.id)) throw TestUserServiceException()
             super.upgradeLevel(user)
