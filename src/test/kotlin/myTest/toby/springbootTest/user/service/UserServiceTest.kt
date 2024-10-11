@@ -14,7 +14,6 @@ import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
-import org.springframework.context.annotation.Import
 import org.springframework.mail.MailException
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
@@ -23,7 +22,6 @@ import org.springframework.transaction.PlatformTransactionManager
 import java.lang.reflect.Proxy
 import java.util.*
 
-//@Import(UserServiceTestConfig::class)
 @SpringBootTest
 @ContextConfiguration(classes = [AppConfig::class, UserServiceTestConfig::class])
 class UserServiceTest {

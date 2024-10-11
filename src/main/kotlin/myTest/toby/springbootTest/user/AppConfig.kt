@@ -8,6 +8,7 @@ import myTest.toby.springbootTest.user.service.TransactionAdvice
 import myTest.toby.springbootTest.user.service.UserServiceImpl
 import org.springframework.aop.Pointcut
 import org.springframework.aop.PointcutAdvisor
+import org.springframework.aop.aspectj.AspectJExpressionPointcut
 import org.springframework.aop.framework.ProxyFactoryBean
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator
 import org.springframework.aop.support.DefaultPointcutAdvisor
@@ -38,22 +39,21 @@ class AppConfig {
     }
 
     @Bean
+    fun transactionPointcut(): AspectJExpressionPointcut {
+        return AspectJExpressionPointcut().apply {
+            this.expression = "execution(* *..*ServiceImpl.upgrade*(..))"
+        }
+    }
+
+    @Bean
     fun transactionAdvice(transactionManager: DataSourceTransactionManager): TransactionAdvice {
         return TransactionAdvice(transactionManager)
     }
 
     @Bean
-    fun transactionPointcut(): NameMatchClassMethodPointcut {
-        return NameMatchClassMethodPointcut().apply {
-            setMappedClassName("*ServiceImpl")
-            setMappedName("upgrade*")
-        }
-    }
-
-    @Bean
     fun transactionAdvisor(
         transactionAdvice: TransactionAdvice,
-        transactionPointcut: NameMatchMethodPointcut
+        transactionPointcut: Pointcut
     ): DefaultPointcutAdvisor {
         return DefaultPointcutAdvisor(transactionPointcut, transactionAdvice)
     }
