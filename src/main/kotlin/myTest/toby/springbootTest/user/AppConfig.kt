@@ -1,19 +1,9 @@
 package myTest.toby.springbootTest.user
 
-import myTest.toby.springbootTest.user.dao.UserDao
 import myTest.toby.springbootTest.user.dao.UserDaoJdbc
 import myTest.toby.springbootTest.user.service.DummyMailSender
-import myTest.toby.springbootTest.user.service.NameMatchClassMethodPointcut
-import myTest.toby.springbootTest.user.service.TransactionAdvice
-import myTest.toby.springbootTest.user.service.UserServiceImpl
-import org.springframework.aop.Pointcut
-import org.springframework.aop.PointcutAdvisor
-import org.springframework.aop.aspectj.AspectJExpressionPointcut
-import org.springframework.aop.framework.ProxyFactoryBean
-import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator
-import org.springframework.aop.support.DefaultPointcutAdvisor
-import org.springframework.aop.support.NameMatchMethodPointcut
-import org.springframework.beans.factory.annotation.Qualifier
+import myTest.toby.springbootTest.user.sqlService.SqlService
+import myTest.toby.springbootTest.user.sqlService.SqlServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
@@ -39,50 +29,31 @@ class AppConfig {
     }
 
     @Bean
-    fun transactionPointcut(): AspectJExpressionPointcut {
-        return AspectJExpressionPointcut().apply {
-            this.expression = "execution(* *..*ServiceImpl.upgrade*(..))"
-        }
-    }
-
-    @Bean
-    fun transactionAdvice(transactionManager: DataSourceTransactionManager): TransactionAdvice {
-        return TransactionAdvice(transactionManager)
-    }
-
-    @Bean
-    fun transactionAdvisor(
-        transactionAdvice: TransactionAdvice,
-        transactionPointcut: Pointcut
-    ): DefaultPointcutAdvisor {
-        return DefaultPointcutAdvisor(transactionPointcut, transactionAdvice)
-    }
-
-    @Bean
-    fun userService(
-        userDao: UserDao,
-        mailSender: DummyMailSender,
-    ): UserServiceImpl {
-        return UserServiceImpl().apply {
-            setUserDao(userDao)
-            setMailSender(mailSender)
-        }
-    }
-
-    @Bean
-    fun userDao(dataSource: DataSource): UserDaoJdbc {
+    fun userDao(dataSource: DataSource, sqlService: SqlService): UserDaoJdbc {
         return UserDaoJdbc().apply {
             setDataSource(dataSource)
+            setSqlService(sqlService)
+        }
+    }
+
+    @Bean
+    fun sqlService(): SqlService {
+        val sqlMap = mapOf(
+            "userAdd" to "insert into users(id, name, password, email, level, login, recommend) values(?,?,?,?,?,?,?)",
+            "userGet" to "select * from users where id = ?",
+            "userGetAll" to "select * from users order by id",
+            "userDeleteAll" to "delete from users",
+            "userGetCount" to "select count(*) from users",
+            "userUpdate" to "update users set name = ?, password = ?, email = ?, level = ?, login = ?, recommend = ? where id = ?"
+        )
+
+        return SqlServiceImpl().apply {
+            setSqlMap(sqlMap)
         }
     }
 
     @Bean
     fun mailSender(): DummyMailSender {
         return DummyMailSender()
-    }
-
-    @Bean
-    fun defaultAdvisorAutoProxyCreator(): DefaultAdvisorAutoProxyCreator {
-        return DefaultAdvisorAutoProxyCreator()
     }
 }

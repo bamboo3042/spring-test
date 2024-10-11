@@ -6,19 +6,13 @@ import myTest.toby.springbootTest.user.domain.User
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
-open class UserServiceImpl : UserService {
-    private lateinit var userDao: UserDao
-    private lateinit var mailSender: MailSender
-
-    fun setUserDao(userDao: UserDao) {
-        this.userDao = userDao
-    }
-
-    fun setMailSender(mailSender: MailSender) {
-        this.mailSender = mailSender
-    }
-
+@Component
+class UserServiceImpl(
+    private val userDao: UserDao,
+    private val mailSender: MailSender
+) : UserService {
     override fun upgradeLevels() {
         val users: List<User> = userDao.getAll()
         for (user in users) {
@@ -38,7 +32,7 @@ open class UserServiceImpl : UserService {
         }
     }
 
-    protected open fun upgradeLevel(user: User) {
+    protected fun upgradeLevel(user: User) {
         user.upgradeLevel()
         userDao.update(user)
         sendUpgradeEMail(user)
@@ -58,6 +52,14 @@ open class UserServiceImpl : UserService {
         if (user?.level == null) user?.level = (Level.BASIC)
         userDao.add(user!!)
     }
+
+    override fun get(id: String): User { return userDao.get(id) }
+
+    override fun getAll(): List<User> { return userDao.getAll() }
+
+    override fun deleteAll() { userDao.deleteAll() }
+
+    override fun update(user: User) { userDao.update(user) }
 
     companion object {
         const val MIN_LOGCOUNT_FOR_SILVER: Int = 50

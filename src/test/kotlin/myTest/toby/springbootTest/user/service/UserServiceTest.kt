@@ -1,7 +1,6 @@
 package myTest.toby.springbootTest.user.service
 
 import io.mockk.*
-import myTest.toby.springbootTest.user.AppConfig
 import myTest.toby.springbootTest.user.dao.UserDao
 import myTest.toby.springbootTest.user.domain.Level
 import myTest.toby.springbootTest.user.domain.User
@@ -10,35 +9,35 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
+import org.springframework.context.annotation.Import
+import org.springframework.dao.TransientDataAccessResourceException
 import org.springframework.mail.MailException
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
-import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.PlatformTransactionManager
-import java.lang.reflect.Proxy
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.DefaultTransactionDefinition
 import java.util.*
 
 @SpringBootTest
-@ContextConfiguration(classes = [AppConfig::class, UserServiceTestConfig::class])
+@Import(TestAppConfig::class)
 class UserServiceTest {
     @Autowired
-    lateinit var userService: UserService
+    lateinit var userServiceImpl: UserService
 
     @Autowired
-    lateinit var testUserService: UserService
-
-    @Autowired
-    lateinit var userDao: UserDao
-
-    @Autowired
-    lateinit var mailSender: MailSender
+    lateinit var testUserServiceImpl: UserService
 
     @Autowired
     lateinit var transactionManager: PlatformTransactionManager
+
+    @Autowired
+    lateinit var userDao: UserDao
 
     @Autowired
     lateinit var context: ApplicationContext
@@ -59,13 +58,9 @@ class UserServiceTest {
     @Test
     @Throws(Exception::class)
     fun upgradeLevels() {
-        val userServiceImpl = UserServiceImpl()
-
         val mockUserDao = MockUserDao(users)
-        userServiceImpl.setUserDao(mockUserDao)
-
         val mockMailSender = MockMailSender()
-        userServiceImpl.setMailSender(mockMailSender)
+        val userServiceImpl = UserServiceImpl(mockUserDao, mockMailSender)
 
         userServiceImpl.upgradeLevels()
 
@@ -139,15 +134,12 @@ class UserServiceTest {
     @Test
     @Throws(Exception::class)
     fun mockUpgradeLevels() {
-        val userServiceImpl = UserServiceImpl()
-
         val mockUserDao: UserDao = mockk<UserDao>()
+        val mockMailSender = mockk<MockMailSender>()
+        val userServiceImpl = UserServiceImpl(mockUserDao, mockMailSender)
+
         every { mockUserDao.getAll() } returns this.users
         every { mockUserDao.update(any()) } just Runs
-        userServiceImpl.setUserDao(mockUserDao)
-
-        val mockMailSender = mockk<MockMailSender>()
-        userServiceImpl.setMailSender(mockMailSender)
 
         val mailMessageArg = mutableListOf<SimpleMailMessage>()
         every { mockMailSender.send(capture(mailMessageArg)) } just Runs
@@ -183,8 +175,8 @@ class UserServiceTest {
         val userWithoutLevel: User = users[0]
         userWithoutLevel.level = (null)
 
-        userService.add(userWithLevel)
-        userService.add(userWithoutLevel)
+        userServiceImpl.add(userWithLevel)
+        userServiceImpl.add(userWithoutLevel)
 
         val userWithLevelRead: User = userDao.get(userWithLevel.id)
         val userWithoutLevelRead: User = userDao.get(userWithoutLevel.id)
@@ -199,7 +191,7 @@ class UserServiceTest {
         for (user in users) userDao.add(user)
 
         try {
-            this.testUserService.upgradeLevels()
+            this.testUserServiceImpl.upgradeLevels()
             fail("TestUserServiceException expected")
         } catch (e: TestUserServiceException) {
         }
@@ -208,18 +200,15 @@ class UserServiceTest {
     }
 
     @Test
-    fun advisorAutoProxyCreator() {
-        assertThat(testUserService).isInstanceOf(Proxy::class.java)
+    fun readOnlyTransactionAttribute() {
+        assertThrows<TransientDataAccessResourceException> { testUserServiceImpl.getAll() }
     }
 
-    class TestUserServiceImpl(
-        private val id: String = "madnite1"
-    ) : UserServiceImpl() {
-        override fun upgradeLevel(user: User) {
-            if (user.id.equals(this.id)) throw TestUserServiceException()
-            super.upgradeLevel(user)
-        }
+    @Test
+    @Transactional
+    fun transactionSync() {
+        userDao.deleteAll()
+        userServiceImpl.add(users.get(0))
+        userServiceImpl.add(users.get(1))
     }
-
-    internal class TestUserServiceException : RuntimeException()
 }

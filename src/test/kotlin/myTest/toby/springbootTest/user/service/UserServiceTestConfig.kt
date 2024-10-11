@@ -17,78 +17,11 @@ import javax.sql.DataSource
 
 @TestConfiguration
 class UserServiceTestConfig {
-//    @Bean
-//    fun dataSource(): DataSource {
-//        return SimpleDriverDataSource().apply {
-//            setDriverClass(com.mysql.cj.jdbc.Driver::class.java)
-//            url = "jdbc:mysql://localhost/springbook?characterEncoding=UTF-8"
-//            username = "root"
-//            password = "123456"
-//        }
-//    }
-//
-//    @Bean
-//    fun transactionManager(): DataSourceTransactionManager {
-//        return DataSourceTransactionManager(dataSource())
-//    }
-//
-//    @Bean
-//    fun transactionAdvice(transactionManager: DataSourceTransactionManager): TransactionAdvice {
-//        return TransactionAdvice(transactionManager)
-//    }
-//
-//    @Bean
-//    fun transactionPointcut(): NameMatchClassMethodPointcut {
-//        return NameMatchClassMethodPointcut().apply {
-//            setMappedClassName("*ServiceImpl")
-//            setMappedName("upgrade*")
-//        }
-//    }
-//
-//    @Bean
-//    fun transactionAdvisor(
-//        transactionAdvice: TransactionAdvice,
-//        transactionPointcut: NameMatchMethodPointcut
-//    ): DefaultPointcutAdvisor {
-//        return DefaultPointcutAdvisor(transactionPointcut, transactionAdvice)
-//    }
-//
-//    @Bean
-//    fun userService(
-//        userDao: UserDao,
-//        mailSender: DummyMailSender,
-//    ): UserServiceImpl {
-//        return UserServiceImpl().apply {
-//            setUserDao(userDao)
-//            setMailSender(mailSender)
-//        }
-//    }
-//
-//    @Bean
-//    fun userDao(dataSource: DataSource): UserDaoJdbc {
-//        return UserDaoJdbc().apply {
-//            setDataSource(dataSource)
-//        }
-//    }
-//
-//    @Bean
-//    fun mailSender(): DummyMailSender {
-//        return DummyMailSender()
-//    }
-//
-//    @Bean
-//    fun defaultAdvisorAutoProxyCreator(): DefaultAdvisorAutoProxyCreator {
-//        return DefaultAdvisorAutoProxyCreator()
-//    }
-
     @Bean
     fun testUserService(
         mailSender: MailSender,
         userDao: UserDao,
-    ): UserServiceTest.TestUserServiceImpl {
-        return UserServiceTest.TestUserServiceImpl().apply {
-            this.setUserDao(userDao)
-            this.setMailSender(mailSender)
-        }
+    ): TestUserServiceImpl {
+        return TestUserServiceImpl(userDao = userDao, mailSender = mailSender)
     }
 }
