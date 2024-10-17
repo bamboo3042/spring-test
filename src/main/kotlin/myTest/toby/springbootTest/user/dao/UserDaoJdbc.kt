@@ -50,7 +50,7 @@ class UserDaoJdbc : UserDao {
         )!!
     }
 
-    override fun deleteAll() {
+    override fun    deleteAll() {
         jdbcTemplate.update(this.sqlService.getSql("userDeleteAll"))
     }
 

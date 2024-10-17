@@ -23,6 +23,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("org.springframework.boot:spring-boot-starter-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("javax.xml.bind:jaxb-api:2.3.1") // JAXB API
+	implementation("org.glassfish.jaxb:jaxb-runtime:3.0.2") // JAXB Runtime
 	implementation("com.mysql:mysql-connector-j")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")

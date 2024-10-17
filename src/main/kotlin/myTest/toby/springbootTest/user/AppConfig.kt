@@ -2,8 +2,7 @@ package myTest.toby.springbootTest.user
 
 import myTest.toby.springbootTest.user.dao.UserDaoJdbc
 import myTest.toby.springbootTest.user.service.DummyMailSender
-import myTest.toby.springbootTest.user.sqlService.SqlService
-import myTest.toby.springbootTest.user.sqlService.SqlServiceImpl
+import myTest.toby.springbootTest.user.sqlService.*
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
@@ -37,19 +36,20 @@ class AppConfig {
     }
 
     @Bean
-    fun sqlService(): SqlService {
-        val sqlMap = mapOf(
-            "userAdd" to "insert into users(id, name, password, email, level, login, recommend) values(?,?,?,?,?,?,?)",
-            "userGet" to "select * from users where id = ?",
-            "userGetAll" to "select * from users order by id",
-            "userDeleteAll" to "delete from users",
-            "userGetCount" to "select count(*) from users",
-            "userUpdate" to "update users set name = ?, password = ?, email = ?, level = ?, login = ?, recommend = ? where id = ?"
-        )
-
-        return SqlServiceImpl().apply {
-            setSqlMap(sqlMap)
+    fun sqlReader(): SqlReader {
+        return JaxbXmlSqlReader().also {
+            it.setSqlMapFile("sqlmap.xml")
         }
+    }
+
+    @Bean
+    fun sqlRegistry(): SqlRegistry {
+        return HashMapSqlRegistry()
+    }
+
+    @Bean
+    fun sqlService(): SqlService {
+        return DefaultSqlService()
     }
 
     @Bean

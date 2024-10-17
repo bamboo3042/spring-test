@@ -19,9 +19,7 @@ import org.springframework.dao.TransientDataAccessResourceException
 import org.springframework.mail.MailException
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
-import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.transaction.support.DefaultTransactionDefinition
 import java.util.*
 
 @SpringBootTest
@@ -32,9 +30,6 @@ class UserServiceTest {
 
     @Autowired
     lateinit var testUserServiceImpl: UserService
-
-    @Autowired
-    lateinit var transactionManager: PlatformTransactionManager
 
     @Autowired
     lateinit var userDao: UserDao
