@@ -47,8 +47,8 @@ class AppConfig {
     }
 
     @Bean
-    fun sqlRegistry(): SqlRegistry {
-        return HashMapSqlRegistry()
+    fun sqlRegistry(): UpdatableSqlRegistry {
+        return MyUpdatableSqlRegistry()
     }
 
     @Bean
