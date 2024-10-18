@@ -17,7 +17,7 @@ class JaxbTest {
         val inputStream: InputStream = xmlResource.inputStream
 
         val sqlmap = unmarshaller.unmarshal(inputStream) as Sqlmap
-        val sqlList = sqlmap.getSqlList()
+        val sqlList = sqlmap.sql
 
         assertThat(sqlList.size).isEqualTo(3)
         assertThat(sqlList[0].value).isEqualTo("insert")

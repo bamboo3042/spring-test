@@ -24,7 +24,7 @@ class JaxbXmlSqlReader: SqlReader {
 
             val sqlmap = unmarshaller.unmarshal(inputStream) as Sqlmap
 
-            for (sql in sqlmap.getSqlList()) {
+            for (sql in sqlmap.sql) {
                 sqlRegistry.registerSql(sql.key, sql.value)
             }
         } catch (e: JAXBException) {

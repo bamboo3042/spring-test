@@ -7,7 +7,7 @@ open class BaseSqlService: SqlService{
     lateinit var sqlRegistry: SqlRegistry
 
     @PostConstruct
-    fun load() {
+    fun loadSql() {
         this.sqlReader.read(this.sqlRegistry)
     }
 

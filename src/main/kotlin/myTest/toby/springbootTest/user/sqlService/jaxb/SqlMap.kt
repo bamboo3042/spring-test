@@ -8,8 +8,4 @@ import jakarta.xml.bind.annotation.*
 data class Sqlmap(
     @XmlElementRef(name = "sql", namespace = "http://www.epril.com/sqlmap", type = SqlType::class)
     var sql: MutableList<SqlType> = mutableListOf()
-) {
-    fun getSqlList(): List<SqlType> {
-        return this.sql
-    }
-}
+)

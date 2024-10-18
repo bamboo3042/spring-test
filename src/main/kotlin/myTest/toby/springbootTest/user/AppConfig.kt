@@ -3,10 +3,14 @@ package myTest.toby.springbootTest.user
 import myTest.toby.springbootTest.user.dao.UserDaoJdbc
 import myTest.toby.springbootTest.user.service.DummyMailSender
 import myTest.toby.springbootTest.user.sqlService.*
+import myTest.toby.springbootTest.user.sqlService.jaxb.Sqlmap
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.ClassPathResource
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.datasource.SimpleDriverDataSource
+import org.springframework.oxm.Unmarshaller
+import org.springframework.oxm.jaxb.Jaxb2Marshaller
 import javax.sql.DataSource
 
 @Configuration
@@ -48,12 +52,19 @@ class AppConfig {
     }
 
     @Bean
-    fun sqlService(): SqlService {
-        return DefaultSqlService()
+    fun sqlService(unmarshaller: Unmarshaller): SqlService {
+        return OxmSqlService(unmarshaller, ClassPathResource("sqlmap.xml"))
     }
 
     @Bean
     fun mailSender(): DummyMailSender {
         return DummyMailSender()
+    }
+
+    @Bean
+    fun unmarshaller(): Unmarshaller {
+        return Jaxb2Marshaller().also {
+            it.setClassesToBeBound(Sqlmap::class.java)
+        }
     }
 }
