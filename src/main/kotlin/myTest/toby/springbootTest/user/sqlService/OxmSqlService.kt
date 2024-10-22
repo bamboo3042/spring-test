@@ -9,13 +9,14 @@ import org.springframework.oxm.Unmarshaller
 import java.io.IOException
 import javax.xml.transform.stream.StreamSource
 
-class OxmSqlService(
-    unmarshaller: Unmarshaller,
-    sqlmap: Resource? = null
-): SqlService {
+class OxmSqlService: SqlService {
     private val baseSqlService = BaseSqlService()
-    private val oxmSqlReader = OxmSqlReader(unmarshaller).also { if (sqlmap != null) it.setSqlmap(sqlmap) }
-    private val sqlRegistry = HashMapSqlRegistry()
+    private val oxmSqlReader = OxmSqlReader()
+    private var sqlRegistry: SqlRegistry = HashMapSqlRegistry()
+
+    fun setUnMarshaller(unmarshaller: Unmarshaller) { oxmSqlReader.setUnMarshaller(unmarshaller) }
+    fun setSqlmap(sqlmap: Resource) { oxmSqlReader.setSqlmap(sqlmap) }
+    fun setSqlRegistry(sqlRegistry: SqlRegistry) { this.sqlRegistry = sqlRegistry }
 
     @PostConstruct
     fun loadSql() {
@@ -29,13 +30,13 @@ class OxmSqlService(
         return baseSqlService.getSql(key)
     }
 
-    private class OxmSqlReader(
-        private val unmarshaller: Unmarshaller,
-    ): SqlReader {
+    private class OxmSqlReader: SqlReader {
         private val DEFAULT_SQLMAP_FILE: String = "sqlmap.xml"
         private var sqlmap: Resource = ClassPathResource(DEFAULT_SQLMAP_FILE, UserDao::class.java)
+        private lateinit var unmarshaller: Unmarshaller
 
         fun setSqlmap(sqlmap: Resource) { this.sqlmap = sqlmap }
+        fun setUnMarshaller(unmarshaller: Unmarshaller) { this.unmarshaller = unmarshaller }
 
         override fun read(sqlRegistry: SqlRegistry) {
             try {

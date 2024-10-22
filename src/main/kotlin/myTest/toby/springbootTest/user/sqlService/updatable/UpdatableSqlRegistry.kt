@@ -1,4 +1,7 @@
-package myTest.toby.springbootTest.user.sqlService
+package myTest.toby.springbootTest.user.sqlService.updatable
+
+import myTest.toby.springbootTest.user.sqlService.SqlRegistry
+import myTest.toby.springbootTest.user.sqlService.SqlUpdateFailureException
 
 interface UpdatableSqlRegistry: SqlRegistry {
     @Throws(SqlUpdateFailureException::class)

@@ -4,11 +4,17 @@ import myTest.toby.springbootTest.user.dao.UserDaoJdbc
 import myTest.toby.springbootTest.user.service.DummyMailSender
 import myTest.toby.springbootTest.user.sqlService.*
 import myTest.toby.springbootTest.user.sqlService.jaxb.Sqlmap
+import myTest.toby.springbootTest.user.sqlService.updatable.EmbeddedDbSqlRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.datasource.SimpleDriverDataSource
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.oxm.Unmarshaller
 import org.springframework.oxm.jaxb.Jaxb2Marshaller
 import javax.sql.DataSource
@@ -24,6 +30,14 @@ class AppConfig {
             username = "root"
             password = "123456"
         }
+    }
+
+    @Bean
+    fun embeddedDatabase(): EmbeddedDatabase {
+        return EmbeddedDatabaseBuilder()
+            .setType(EmbeddedDatabaseType.HSQL)
+            .addScript("schema.sql")
+            .build()
     }
 
     @Bean
@@ -47,13 +61,19 @@ class AppConfig {
     }
 
     @Bean
-    fun sqlRegistry(): UpdatableSqlRegistry {
-        return MyUpdatableSqlRegistry()
+    fun sqlRegistry(embeddedDatabase: EmbeddedDatabase): EmbeddedDbSqlRegistry {
+        return EmbeddedDbSqlRegistry().also {
+            it.setDataSource(embeddedDatabase)
+        }
     }
 
     @Bean
-    fun sqlService(unmarshaller: Unmarshaller): SqlService {
-        return OxmSqlService(unmarshaller, ClassPathResource("sqlmap.xml"))
+    fun sqlService(unmarshaller: Unmarshaller, sqlRegistry: SqlRegistry): SqlService {
+        return OxmSqlService().also {
+            it.setUnMarshaller(unmarshaller)
+            it.setSqlmap(ClassPathResource("sqlmap.xml"))
+            it.setSqlRegistry(sqlRegistry)
+        }
     }
 
     @Bean
@@ -65,6 +85,18 @@ class AppConfig {
     fun unmarshaller(): Unmarshaller {
         return Jaxb2Marshaller().also {
             it.setClassesToBeBound(Sqlmap::class.java)
+        }
+    }
+
+    @Bean
+    fun entityManagerFactory(embeddedDatabase: EmbeddedDatabase): LocalContainerEntityManagerFactoryBean {
+        return LocalContainerEntityManagerFactoryBean().apply {
+            setDataSource(embeddedDatabase)
+            setPackagesToScan("myTest.toby.springbootTest.user.entity")
+            jpaVendorAdapter = HibernateJpaVendorAdapter().apply {
+                setGenerateDdl(true)
+                setShowSql(true)
+            }
         }
     }
 }
