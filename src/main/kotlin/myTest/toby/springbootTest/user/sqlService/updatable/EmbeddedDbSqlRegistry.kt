@@ -4,14 +4,21 @@ import myTest.toby.springbootTest.user.sqlService.SqlNotfoundException
 import myTest.toby.springbootTest.user.sqlService.SqlUpdateFailureException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.queryForObject
+import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.support.TransactionCallbackWithoutResult
+import org.springframework.transaction.support.TransactionTemplate
 import javax.sql.DataSource
 
 class EmbeddedDbSqlRegistry: UpdatableSqlRegistry {
     private lateinit var jdbc: JdbcTemplate
+    private lateinit var transactionTemplate: TransactionTemplate
 
     fun setDataSource(dataSource: DataSource) {
         this.jdbc = JdbcTemplate(dataSource)
+        this.transactionTemplate = TransactionTemplate(
+            DataSourceTransactionManager(dataSource)
+        )
     }
 
     @Throws(SqlUpdateFailureException::class)
@@ -25,9 +32,15 @@ class EmbeddedDbSqlRegistry: UpdatableSqlRegistry {
 
     @Throws(SqlUpdateFailureException::class)
     override fun updateSql(sqlmap: Map<String, String>) {
-        for (entry in sqlmap.entries) {
-            updateSql(entry.key, entry.value)
-        }
+        transactionTemplate.execute(
+            object : TransactionCallbackWithoutResult() {
+                override fun doInTransactionWithoutResult(status: TransactionStatus) {
+                    for ((key, value) in sqlmap) {
+                        updateSql(key, value)
+                    }
+                }
+            }
+        )
     }
 
     override fun registerSql(key: String, sql: String) {
