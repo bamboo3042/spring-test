@@ -5,10 +5,7 @@ import myTest.toby.springbootTest.user.domain.Level
 import myTest.toby.springbootTest.user.domain.User
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
-import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
-@Component
 class UserServiceImpl(
     private val userDao: UserDao,
     private val mailSender: MailSender

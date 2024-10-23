@@ -1,6 +1,7 @@
 package myTest.toby.springbootTest.user.service
 
 import io.mockk.*
+import myTest.toby.springbootTest.user.TestApplicationContext
 import myTest.toby.springbootTest.user.dao.UserDao
 import myTest.toby.springbootTest.user.domain.Level
 import myTest.toby.springbootTest.user.domain.User
@@ -10,26 +11,27 @@ import org.hamcrest.MatcherAssert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
-import org.springframework.context.annotation.Import
 import org.springframework.dao.TransientDataAccessResourceException
 import org.springframework.mail.MailException
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
-@SpringBootTest
-@Import(TestAppConfig::class)
-class UserServiceTest {
+@ExtendWith(SpringExtension::class)
+@ContextConfiguration(classes = [TestApplicationContext::class])
+open class UserServiceTest {
     @Autowired
-    lateinit var userServiceImpl: UserService
+    lateinit var userService: UserService
 
     @Autowired
-    lateinit var testUserServiceImpl: UserService
+    lateinit var testUserService: UserService
 
     @Autowired
     lateinit var userDao: UserDao
@@ -170,8 +172,8 @@ class UserServiceTest {
         val userWithoutLevel: User = users[0]
         userWithoutLevel.level = (null)
 
-        userServiceImpl.add(userWithLevel)
-        userServiceImpl.add(userWithoutLevel)
+        userService.add(userWithLevel)
+        userService.add(userWithoutLevel)
 
         val userWithLevelRead: User = userDao.get(userWithLevel.id)
         val userWithoutLevelRead: User = userDao.get(userWithoutLevel.id)
@@ -186,7 +188,7 @@ class UserServiceTest {
         for (user in users) userDao.add(user)
 
         try {
-            this.testUserServiceImpl.upgradeLevels()
+            this.testUserService.upgradeLevels()
             fail("TestUserServiceException expected")
         } catch (e: TestUserServiceException) {
         }
@@ -196,14 +198,37 @@ class UserServiceTest {
 
     @Test
     fun readOnlyTransactionAttribute() {
-        assertThrows<TransientDataAccessResourceException> { testUserServiceImpl.getAll() }
+        assertThrows<TransientDataAccessResourceException> { testUserService.getAll() }
     }
 
     @Test
     @Transactional
-    fun transactionSync() {
+    open fun transactionSync() {
         userDao.deleteAll()
-        userServiceImpl.add(users.get(0))
-        userServiceImpl.add(users.get(1))
+        userService.add(users.get(0))
+        userService.add(users.get(1))
+    }
+
+    companion object {
+        class TestUserService(
+            private val userDao: UserDao,
+            private val mailSender: MailSender
+        ) : UserServiceImpl(userDao, mailSender) {
+            private val id: String = "madnite1"
+
+            override fun upgradeLevel(user: User) {
+                if (user.id == this.id) throw TestUserServiceException()
+                super.upgradeLevel(user)
+            }
+
+            override fun getAll(): List<User> {
+                for (user in super.getAll()) {
+                    super.update(user)
+                }
+                return listOf()
+            }
+        }
+
+        internal class TestUserServiceException : RuntimeException()
     }
 }

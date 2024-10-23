@@ -1,8 +1,14 @@
 package myTest.toby.springbootTest.user
 
+import myTest.toby.springbootTest.user.dao.UserDao
 import myTest.toby.springbootTest.user.dao.UserDaoJdbc
 import myTest.toby.springbootTest.user.service.DummyMailSender
-import myTest.toby.springbootTest.user.sqlService.*
+import myTest.toby.springbootTest.user.service.UserService
+import myTest.toby.springbootTest.user.service.UserServiceImpl
+import myTest.toby.springbootTest.user.service.UserServiceTest
+import myTest.toby.springbootTest.user.sqlService.OxmSqlService
+import myTest.toby.springbootTest.user.sqlService.SqlRegistry
+import myTest.toby.springbootTest.user.sqlService.SqlService
 import myTest.toby.springbootTest.user.sqlService.jaxb.Sqlmap
 import myTest.toby.springbootTest.user.sqlService.updatable.EmbeddedDbSqlRegistry
 import org.springframework.context.annotation.Bean
@@ -13,16 +19,16 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
+import org.springframework.mail.MailSender
 import org.springframework.oxm.Unmarshaller
 import org.springframework.oxm.jaxb.Jaxb2Marshaller
 import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
 
 @Configuration
-class AppConfig {
-
+@EnableTransactionManagement
+class TestApplicationContext {
     @Bean
     fun dataSource(): DataSource {
         return SimpleDriverDataSource().apply {
@@ -31,14 +37,6 @@ class AppConfig {
             username = "root"
             password = "123456"
         }
-    }
-
-    @Bean
-    fun embeddedDatabase(): EmbeddedDatabase {
-        return EmbeddedDatabaseBuilder()
-            .setType(EmbeddedDatabaseType.HSQL)
-            .addScript("schema.sql")
-            .build()
     }
 
     @Bean
@@ -55,12 +53,32 @@ class AppConfig {
     }
 
     @Bean
-    fun sqlReader(): SqlReader {
-        return JaxbXmlSqlReader().also {
-            it.setSqlMapFile("sqlmap.xml")
-        }
+    fun userService(userDao: UserDao, mailSender: MailSender): UserService {
+        return UserServiceImpl(
+            userDao = userDao,
+            mailSender = mailSender
+        )
     }
 
+    @Bean
+    fun testUserService(userDao: UserDao, mailSender: MailSender): UserService {
+        return UserServiceTest.Companion.TestUserService(
+            userDao = userDao,
+            mailSender = mailSender
+        )
+    }
+
+    @Bean
+    fun mailSender(): MailSender {
+        return DummyMailSender()
+    }
+
+    @Bean
+    fun unmarshaller(): Unmarshaller {
+        return Jaxb2Marshaller().also {
+            it.setClassesToBeBound(Sqlmap::class.java)
+        }
+    }
     @Bean
     fun sqlRegistry(embeddedDatabase: EmbeddedDatabase): EmbeddedDbSqlRegistry {
         return EmbeddedDbSqlRegistry().also {
@@ -78,26 +96,10 @@ class AppConfig {
     }
 
     @Bean
-    fun mailSender(): DummyMailSender {
-        return DummyMailSender()
-    }
-
-    @Bean
-    fun unmarshaller(): Unmarshaller {
-        return Jaxb2Marshaller().also {
-            it.setClassesToBeBound(Sqlmap::class.java)
-        }
-    }
-
-    @Bean
-    fun entityManagerFactory(embeddedDatabase: EmbeddedDatabase): LocalContainerEntityManagerFactoryBean {
-        return LocalContainerEntityManagerFactoryBean().apply {
-            setDataSource(embeddedDatabase)
-            setPackagesToScan("myTest.toby.springbootTest.user.entity")
-            jpaVendorAdapter = HibernateJpaVendorAdapter().apply {
-                setGenerateDdl(true)
-                setShowSql(true)
-            }
-        }
+    fun embeddedDatabase(): EmbeddedDatabase {
+        return EmbeddedDatabaseBuilder()
+            .setType(EmbeddedDatabaseType.HSQL)
+            .addScript("schema.sql")
+            .build()
     }
 }
