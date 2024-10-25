@@ -1,6 +1,5 @@
 package myTest.toby.springbootTest.user
 
-import myTest.toby.springbootTest.user.dao.UserDaoJdbc
 import myTest.toby.springbootTest.user.service.DummyMailSender
 import myTest.toby.springbootTest.user.sqlService.*
 import myTest.toby.springbootTest.user.sqlService.jaxb.Sqlmap
@@ -47,14 +46,6 @@ class AppConfig {
     }
 
     @Bean
-    fun userDao(dataSource: DataSource, sqlService: SqlService): UserDaoJdbc {
-        return UserDaoJdbc().apply {
-            setDataSource(dataSource)
-            setSqlService(sqlService)
-        }
-    }
-
-    @Bean
     fun sqlReader(): SqlReader {
         return JaxbXmlSqlReader().also {
             it.setSqlMapFile("sqlmap.xml")
@@ -92,8 +83,8 @@ class AppConfig {
     @Bean
     fun entityManagerFactory(embeddedDatabase: EmbeddedDatabase): LocalContainerEntityManagerFactoryBean {
         return LocalContainerEntityManagerFactoryBean().apply {
-            setDataSource(embeddedDatabase)
-            setPackagesToScan("myTest.toby.springbootTest.user.entity")
+            dataSource = embeddedDatabase
+            setPackagesToScan("myTest.toby.springbootTest.user")
             jpaVendorAdapter = HibernateJpaVendorAdapter().apply {
                 setGenerateDdl(true)
                 setShowSql(true)

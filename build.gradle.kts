@@ -26,6 +26,7 @@ dependencies {
 	implementation("javax.xml.bind:jaxb-api:2.3.1") // JAXB API
 	implementation("org.glassfish.jaxb:jaxb-runtime:3.0.2") // JAXB Runtime
 	implementation("org.springframework:spring-oxm:6.1.13")
+	implementation("org.hsqldb:hsqldb:2.7.1")
 
 	implementation("com.mysql:mysql-connector-j")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -35,7 +36,6 @@ dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.3")
 	testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.3")
 	testImplementation("io.mockk:mockk:1.13.13")
-	testImplementation("org.hsqldb:hsqldb:2.7.1")
 }
 
 tasks.withType<KotlinCompile> {
