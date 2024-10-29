@@ -1,7 +1,6 @@
 package myTest.toby.springbootTest.user.service
 
 import io.mockk.*
-import myTest.toby.springbootTest.user.AppConfig
 import myTest.toby.springbootTest.user.TestApplicationContext
 import myTest.toby.springbootTest.user.dao.UserDao
 import myTest.toby.springbootTest.user.domain.Level
@@ -15,18 +14,21 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.support.DefaultListableBeanFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.dao.TransientDataAccessResourceException
 import org.springframework.mail.MailException
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @ExtendWith(SpringExtension::class)
-@ContextConfiguration(classes = [TestApplicationContext::class, AppConfig::class])
+@ActiveProfiles("test")
+@ContextConfiguration(classes = [TestApplicationContext::class])
 open class UserServiceTest {
     @Autowired
     lateinit var userService: UserService
@@ -39,6 +41,16 @@ open class UserServiceTest {
 
     @Autowired
     lateinit var context: ApplicationContext
+
+    @Autowired
+    lateinit var bf: DefaultListableBeanFactory
+
+    @Test
+    fun beans() {
+        bf.beanDefinitionNames.forEach { n ->
+            println("$n\t${bf.getBean(n).javaClass.name}")
+        }
+    }
 
     var users: List<User> = listOf() // test fixture
 

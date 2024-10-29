@@ -1,6 +1,5 @@
 package myTest.toby.springbootTest.user.dao
 
-import myTest.toby.springbootTest.user.AppConfig
 import myTest.toby.springbootTest.user.TestApplicationContext
 import myTest.toby.springbootTest.user.domain.Level
 import myTest.toby.springbootTest.user.domain.User
@@ -14,13 +13,15 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator
 import org.springframework.jdbc.support.SQLExceptionTranslator
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.sql.SQLException
 import javax.sql.DataSource
 
 @ExtendWith(SpringExtension::class)
-@ContextConfiguration(classes = [TestApplicationContext::class, AppConfig::class])
+@ActiveProfiles("test")
+@ContextConfiguration(classes = [TestApplicationContext::class])
 class UserDaoTest {
     @Autowired
     lateinit var dao: UserDao
