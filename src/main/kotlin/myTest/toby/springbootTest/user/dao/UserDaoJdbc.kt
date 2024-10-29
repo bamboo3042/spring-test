@@ -3,18 +3,23 @@ package myTest.toby.springbootTest.user.dao
 import myTest.toby.springbootTest.user.domain.Level
 import myTest.toby.springbootTest.user.domain.User
 import myTest.toby.springbootTest.user.sqlService.SqlService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.queryForObject
+import org.springframework.stereotype.Component
 import javax.sql.DataSource
 
+@Component
 class UserDaoJdbc : UserDao {
+    @Autowired
     private lateinit var sqlService: SqlService
 
     fun setSqlService(sqlService: SqlService) {
         this.sqlService = sqlService
     }
 
+    @Autowired
     fun setDataSource(dataSource: DataSource?) {
         this.jdbcTemplate = JdbcTemplate(dataSource!!)
     }

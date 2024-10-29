@@ -1,6 +1,7 @@
 package myTest.toby.springbootTest.user.service
 
 import io.mockk.*
+import myTest.toby.springbootTest.user.AppConfig
 import myTest.toby.springbootTest.user.TestApplicationContext
 import myTest.toby.springbootTest.user.dao.UserDao
 import myTest.toby.springbootTest.user.domain.Level
@@ -25,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @ExtendWith(SpringExtension::class)
-@ContextConfiguration(classes = [TestApplicationContext::class])
+@ContextConfiguration(classes = [TestApplicationContext::class, AppConfig::class])
 open class UserServiceTest {
     @Autowired
     lateinit var userService: UserService
