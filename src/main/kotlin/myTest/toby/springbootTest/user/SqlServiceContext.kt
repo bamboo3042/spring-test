@@ -3,9 +3,9 @@ package myTest.toby.springbootTest.user
 import myTest.toby.springbootTest.user.sqlService.*
 import myTest.toby.springbootTest.user.sqlService.jaxb.Sqlmap
 import myTest.toby.springbootTest.user.sqlService.updatable.EmbeddedDbSqlRegistry
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.io.ClassPathResource
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
@@ -16,6 +16,9 @@ import org.springframework.oxm.jaxb.Jaxb2Marshaller
 
 @Configuration
 class SqlServiceContext {
+    @Autowired
+    lateinit var sqlMapConfig: SqlMapConfig
+
     @Bean
     fun sqlReader(): SqlReader {
         return JaxbXmlSqlReader().also {
@@ -41,7 +44,7 @@ class SqlServiceContext {
     fun sqlService(unmarshaller: Unmarshaller, sqlRegistry: SqlRegistry): SqlService {
         return OxmSqlService().also {
             it.setUnMarshaller(unmarshaller)
-            it.setSqlmap(ClassPathResource("sqlmap.xml"))
+            it.setSqlmap(this.sqlMapConfig.getSqlMapResource())
             it.setSqlRegistry(sqlRegistry)
         }
     }

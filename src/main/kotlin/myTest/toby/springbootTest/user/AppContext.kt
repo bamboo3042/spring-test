@@ -3,6 +3,8 @@ package myTest.toby.springbootTest.user
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.*
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer
+import org.springframework.core.io.ClassPathResource
+import org.springframework.core.io.Resource
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.datasource.SimpleDriverDataSource
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
@@ -16,11 +18,11 @@ import java.sql.Driver
 import javax.sql.DataSource
 
 @Configuration
-@EnableTransactionManagement
 @ComponentScan(basePackages = ["myTest.toby.springbootTest.user.dao"])
-@Import(SqlServiceContext::class)
-@PropertySource("classpath:database.properties")
-class AppContext {
+@EnableTransactionManagement
+@EnableSqlService
+@PropertySource("/database.properties")
+class AppContext: SqlMapConfig {
     @Value("\${db.driverClass}")
     lateinit var driverClass: Class<out Driver>
     @Value("\${db.url}")
@@ -71,5 +73,9 @@ class AppContext {
         fun placeholderConfigurer(): PropertySourcesPlaceholderConfigurer {
             return PropertySourcesPlaceholderConfigurer()
         }
+    }
+
+    override fun getSqlMapResource(): Resource {
+        return ClassPathResource("sqlmap.xml")
     }
 }

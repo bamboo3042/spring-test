@@ -1,7 +1,6 @@
 package myTest.toby.springbootTest.user.sqlService
 
 import jakarta.annotation.PostConstruct
-import myTest.toby.springbootTest.user.dao.UserDao
 import myTest.toby.springbootTest.user.sqlService.jaxb.Sqlmap
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.Resource
@@ -31,8 +30,8 @@ class OxmSqlService: SqlService {
     }
 
     private class OxmSqlReader: SqlReader {
-        private val DEFAULT_SQLMAP_FILE: String = "sqlmap.xml"
-        private var sqlmap: Resource = ClassPathResource(DEFAULT_SQLMAP_FILE, UserDao::class.java)
+        private val DEFAULT_SQLMAP_FILE: String = "/sqlmap.xml"
+        private var sqlmap: Resource = ClassPathResource(DEFAULT_SQLMAP_FILE)
         private lateinit var unmarshaller: Unmarshaller
 
         fun setSqlmap(sqlmap: Resource) { this.sqlmap = sqlmap }
