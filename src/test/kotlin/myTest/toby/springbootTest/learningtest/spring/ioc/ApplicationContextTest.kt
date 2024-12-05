@@ -1,14 +1,13 @@
 package myTest.toby.springbootTest.learningtest.spring.ioc
 
-import myTest.toby.springbootTest.learningtest.spring.ioc.bean.Hello
-import myTest.toby.springbootTest.learningtest.spring.ioc.bean.Printer
-import myTest.toby.springbootTest.learningtest.spring.ioc.bean.StringPrinter
+import myTest.toby.springbootTest.learningtest.spring.ioc.bean.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.beans.factory.config.RuntimeBeanReference
 import org.springframework.beans.factory.support.RootBeanDefinition
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.GenericApplicationContext
 import org.springframework.context.support.GenericXmlApplicationContext
 import org.springframework.context.support.StaticApplicationContext
@@ -55,7 +54,7 @@ class ApplicationContextTest {
     fun genericApplicationContext() {
         val ac = GenericApplicationContext()
         val reader = XmlBeanDefinitionReader(ac)
-        reader.loadBeanDefinitions("ioc/genericApplicationContext.xml")
+        reader.loadBeanDefinitions("ioc.genericApplicationContext.xml")
 
         ac.refresh()
 
@@ -67,7 +66,7 @@ class ApplicationContextTest {
 
     @Test
     fun genericXmlApplicationContext() {
-        val ac = GenericXmlApplicationContext("ioc/genericApplicationContext.xml")
+        val ac = GenericXmlApplicationContext("ioc.genericApplicationContext.xml")
 
         val hello = ac.getBean("hello", Hello::class.java)
         hello.print()
@@ -77,11 +76,11 @@ class ApplicationContextTest {
 
     @Test
     fun contextHierarchy() {
-        val parent = GenericXmlApplicationContext("ioc/parentContext.xml")
+        val parent = GenericXmlApplicationContext("ioc.parentContext.xml")
 
         val child = GenericApplicationContext(parent)
         val reader = XmlBeanDefinitionReader(child)
-        reader.loadBeanDefinitions("ioc/childContext.xml")
+        reader.loadBeanDefinitions("ioc.childContext.xml")
         child.refresh()
 
         val printer = child.getBean("printer", Printer::class.java)
@@ -93,5 +92,25 @@ class ApplicationContextTest {
 
         hello.print()
         assertThat(printer.toString()).isEqualTo("Hello Child")
+    }
+
+    @Test
+    fun simpleBeanScanning() {
+        val ctx = AnnotationConfigApplicationContext("myTest.toby.springbootTest.learningtest.spring.ioc.bean")
+        val hello = ctx.getBean("annotatedHello", AnnotatedHello::class.java)
+
+        assertThat(hello).isNotNull
+    }
+
+    @Test
+    fun configurationBean() {
+        val ctx = AnnotationConfigApplicationContext(AnnotatedHelloConfig::class.java)
+        val hello = ctx.getBean("annotatedHello", AnnotatedHello::class.java)
+        assertThat(hello).isNotNull
+
+        val config = ctx.getBean("annotatedHelloConfig", AnnotatedHelloConfig::class.java)
+        assertThat(config).isNotNull
+
+        assertThat(config.annotatedHello()).isSameAs(hello)
     }
 }
